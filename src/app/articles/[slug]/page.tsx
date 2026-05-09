@@ -1,10 +1,10 @@
-import { supabase } from '@/lib/supabase'
-import { Post } from '@/lib/types'
-import { markdownToHtml, extractHeadings } from '@/lib/markdown'
+import { supabase } from '@/src/lib/supabase'
+import { Post } from '@/src/lib/types'
+import { markdownToHtml, extractHeadings } from '@/src/lib/markdown'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-function formatDate(dateStr: string) {
+const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -19,11 +19,11 @@ const selectQuery = `
   post_tags ( tags ( id, name, slug ) )
 `
 
-export default async function ArticlePage({
+const ArticlePage = async ({
   params,
 }: {
   params: Promise<{ slug: string }>
-}) {
+}) => {
   const { slug } = await params
 
   const { data } = await supabase
@@ -202,3 +202,5 @@ export default async function ArticlePage({
     </div>
   )
 }
+
+export default ArticlePage

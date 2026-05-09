@@ -1,4 +1,4 @@
-export function markdownToHtml(md: string): string {
+export const markdownToHtml = (md: string): string => {
   const blocks: string[] = []
   const lines = md.split('\n')
   let i = 0
@@ -68,7 +68,7 @@ export function markdownToHtml(md: string): string {
   return blocks.join('\n')
 }
 
-export function extractHeadings(md: string): { id: string; text: string; level: number }[] {
+export const extractHeadings = (md: string): { id: string; text: string; level: number }[] => {
   return md
     .split('\n')
     .filter(line => /^#{2,3} /.test(line))
@@ -79,21 +79,21 @@ export function extractHeadings(md: string): { id: string; text: string; level: 
     })
 }
 
-function parseInline(text: string): string {
+const parseInline = (text: string): string => {
   return text
     .replace(/`([^`]+)`/g, '<code>$1</code>')
     .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
     .replace(/\*([^*]+)\*/g, '<em>$1</em>')
 }
 
-function escapeHtml(text: string): string {
+const escapeHtml = (text: string): string => {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
 }
 
-function slugify(text: string): string {
+const slugify = (text: string): string => {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')

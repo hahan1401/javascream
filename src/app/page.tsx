@@ -1,8 +1,8 @@
-import { supabase } from '@/lib/supabase'
-import { Post, Category, Tag } from '@/lib/types'
+import { supabase } from '@/src/lib/supabase'
+import { Post, Category, Tag } from '@/src/lib/types'
 import Link from 'next/link'
 
-function formatDate(dateStr: string) {
+const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -10,7 +10,7 @@ function formatDate(dateStr: string) {
   })
 }
 
-function CategoryLabel({ name, slug }: { name: string; slug: string }) {
+const CategoryLabel = ({ name, slug }: { name: string; slug: string }) => {
   return (
     <Link
       href={`/archive?category=${slug}`}
@@ -21,7 +21,7 @@ function CategoryLabel({ name, slug }: { name: string; slug: string }) {
   )
 }
 
-function PostCard({ post }: { post: Post }) {
+const PostCard = ({ post }: { post: Post }) => {
   return (
     <article className="border border-[#c6c6cd] bg-white p-6 rounded-sm hover:border-[#171c1f] transition-colors group flex flex-col">
       {post.categories && (
@@ -45,7 +45,7 @@ function PostCard({ post }: { post: Post }) {
   )
 }
 
-export default async function HomePage() {
+const HomePage = async () => {
   const selectQuery = `
     id, title, slug, excerpt, content, read_time_minutes, published_at, view_count, series_id, series_order,
     categories ( id, name, slug, color, description ),
@@ -236,3 +236,5 @@ export default async function HomePage() {
     </div>
   )
 }
+
+export default HomePage

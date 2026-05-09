@@ -1,7 +1,7 @@
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/src/lib/supabase'
 import Link from 'next/link'
 
-function formatDate(dateStr: string) {
+const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -9,11 +9,11 @@ function formatDate(dateStr: string) {
   })
 }
 
-export default async function ArchivePage({
+const ArchivePage = async ({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
+}) => {
   const sp = await searchParams
   const q = typeof sp.q === 'string' ? sp.q : ''
   const category = typeof sp.category === 'string' ? sp.category : ''
@@ -253,3 +253,5 @@ export default async function ArchivePage({
     </div>
   )
 }
+
+export default ArchivePage

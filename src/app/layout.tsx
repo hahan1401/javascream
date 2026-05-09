@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     'Deep dives on JavaScript internals, performance, and modern patterns for serious developers.',
 }
 
-function Navbar() {
+const Navbar = () => {
   return (
     <nav className="border-b border-[#c6c6cd] bg-white sticky top-0 z-50">
       <div className="max-w-[1200px] mx-auto px-6 h-14 flex items-center justify-between">
@@ -62,7 +62,7 @@ function Navbar() {
   )
 }
 
-function Footer() {
+const Footer = () => {
   return (
     <footer className="border-t border-[#c6c6cd] bg-white mt-20">
       <div className="max-w-[1200px] mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -86,9 +86,9 @@ function Footer() {
   )
 }
 
-export default function RootLayout({
+const RootLayout = ({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: Readonly<{ children: React.ReactNode }>) => {
   return (
     <html
       lang="en"
@@ -102,3 +102,5 @@ export default function RootLayout({
     </html>
   )
 }
+
+export default RootLayout
