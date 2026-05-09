@@ -1,5 +1,7 @@
-import { supabase } from '@/src/lib/supabase'
-import { Post, Category, Tag } from '@/src/lib/types'
+import { getFeaturedPost, getLatestPosts } from '@/src/queries/posts'
+import { getCategories } from '@/src/queries/categories'
+import { getTags } from '@/src/queries/tags'
+import type { PostSummary, Category, Tag } from '@/src/types'
 import Link from 'next/link'
 
 const formatDate = (dateStr: string) => {
@@ -21,7 +23,7 @@ const CategoryLabel = ({ name, slug }: { name: string; slug: string }) => {
   )
 }
 
-const PostCard = ({ post }: { post: Post }) => {
+const PostCard = ({ post }: { post: PostSummary }) => {
   return (
     <article className="border border-[#c6c6cd] bg-white p-6 rounded-sm hover:border-[#171c1f] transition-colors group flex flex-col">
       {post.categories && (
@@ -46,41 +48,12 @@ const PostCard = ({ post }: { post: Post }) => {
 }
 
 const HomePage = async () => {
-  const selectQuery = `
-    id, title, slug, excerpt, content, read_time_minutes, published_at, view_count, series_id, series_order,
-    categories ( id, name, slug, color, description ),
-    profiles ( id, username, full_name, avatar_url, bio ),
-    post_tags ( tags ( id, name, slug ) )
-  `
-
-  const { data: featuredPosts } = await supabase
-    .from('posts')
-    .select(selectQuery)
-    .eq('status', 'published')
-    .order('view_count', { ascending: false })
-    .limit(1)
-
-  const featured = featuredPosts?.[0] as Post | undefined
-
-  const { data: latestData } = await supabase
-    .from('posts')
-    .select(selectQuery)
-    .eq('status', 'published')
-    .neq('id', featured?.id ?? '00000000-0000-0000-0000-000000000000')
-    .order('published_at', { ascending: false })
-    .limit(6)
-
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('id, name, slug, color, description')
-    .order('name')
-
-  const { data: tags } = await supabase
-    .from('tags')
-    .select('id, name, slug')
-    .limit(12)
-
-  const latestPosts = (latestData ?? []) as unknown as Post[]
+  const featured = await getFeaturedPost()
+  const [latestPosts, categories, tags] = await Promise.all([
+    getLatestPosts(featured?.id ?? ''),
+    getCategories(),
+    getTags(12),
+  ])
 
   return (
     <div>
@@ -197,7 +170,7 @@ const HomePage = async () => {
                   TOPICS
                 </h3>
                 <ul className="space-y-2.5">
-                  {(categories as Category[] ?? []).map((cat) => (
+                  {categories.map((cat: Category) => (
                     <li key={cat.id}>
                       <Link
                         href={`/archive?category=${cat.slug}`}
@@ -218,7 +191,7 @@ const HomePage = async () => {
                   POPULAR TAGS
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {(tags as Tag[] ?? []).map((tag) => (
+                  {tags.map((tag: Tag) => (
                     <Link
                       key={tag.id}
                       href={`/archive?tag=${tag.slug}`}

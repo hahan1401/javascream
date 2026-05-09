@@ -1,5 +1,5 @@
-import { supabase } from '@/src/lib/supabase'
-import { Post } from '@/src/lib/types'
+import { getPostBySlug, getRelatedPosts } from '@/src/queries/posts'
+import type { Post, RelatedPost } from '@/src/types'
 import { markdownToHtml, extractHeadings } from '@/src/lib/markdown'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -12,13 +12,6 @@ const formatDate = (dateStr: string) => {
   })
 }
 
-const selectQuery = `
-  id, title, slug, excerpt, content, read_time_minutes, published_at, view_count, series_id, series_order,
-  categories ( id, name, slug, color, description ),
-  profiles ( id, username, full_name, avatar_url, bio ),
-  post_tags ( tags ( id, name, slug ) )
-`
-
 const ArticlePage = async ({
   params,
 }: {
@@ -26,30 +19,16 @@ const ArticlePage = async ({
 }) => {
   const { slug } = await params
 
-  const { data } = await supabase
-    .from('posts')
-    .select(selectQuery)
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .single()
+  const post = await getPostBySlug(slug)
+  if (!post) notFound()
 
-  if (!data) notFound()
-
-  const post = data as unknown as Post
   const html = markdownToHtml(post.content)
   const headings = extractHeadings(post.content)
   const tags = post.post_tags?.map((pt) => pt.tags).filter(Boolean) ?? []
 
-  const { data: related } = await supabase
-    .from('posts')
-    .select(`
-      id, title, slug, excerpt, read_time_minutes,
-      categories ( id, name, slug, color, description )
-    `)
-    .eq('status', 'published')
-    .eq('category_id', (post.categories as any)?.id ?? '')
-    .neq('id', post.id)
-    .limit(3)
+  const related = post.categories
+    ? await getRelatedPosts(post.categories.id, post.id)
+    : []
 
   return (
     <div>
@@ -169,13 +148,13 @@ const ArticlePage = async ({
         </div>
 
         {/* Related articles */}
-        {related && related.length > 0 && (
+        {related.length > 0 && (
           <section className="mt-16 pt-12 border-t border-[#c6c6cd]">
             <h2 className="text-xl font-bold text-[#171c1f] mb-6">
               Related Technical Insights
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {related.map((p: any) => (
+              {related.map((p: RelatedPost) => (
                 <article
                   key={p.id}
                   className="border border-[#c6c6cd] bg-white p-5 rounded-sm hover:border-[#171c1f] transition-colors group"

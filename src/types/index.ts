@@ -35,3 +35,25 @@ export type Post = {
   profiles: Profile | null
   post_tags: { tags: Tag | null }[]
 }
+
+export type PostSummary = {
+  id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  read_time_minutes: number | null
+  published_at: string | null
+  view_count: number
+  categories: Category | null
+  profiles: Pick<Profile, 'id' | 'username' | 'full_name'> | null
+  post_tags: { tags: Tag | null }[]
+}
+
+export type RelatedPost = {
+  id: string
+  title: string
+  slug: string
+  excerpt: string | null
+  read_time_minutes: number | null
+  categories: Category | null
+}

@@ -1,4 +1,7 @@
-import { supabase } from '@/src/lib/supabase'
+import { getFilteredPosts } from '@/src/queries/posts'
+import { getCategories, getCategoryBySlug } from '@/src/queries/categories'
+import { getTags } from '@/src/queries/tags'
+import type { PostSummary, Category, Tag } from '@/src/types'
 import Link from 'next/link'
 
 const formatDate = (dateStr: string) => {
@@ -19,52 +22,22 @@ const ArchivePage = async ({
   const category = typeof sp.category === 'string' ? sp.category : ''
   const tag = typeof sp.tag === 'string' ? sp.tag : ''
 
-  // Resolve category id for filtering
-  let categoryId: string | null = null
-  if (category) {
-    const { data: cat } = await supabase
-      .from('categories')
-      .select('id')
-      .eq('slug', category)
-      .single()
-    categoryId = cat?.id ?? null
-  }
+  const activeCategory = category ? await getCategoryBySlug(category) : null
 
-  let query = supabase
-    .from('posts')
-    .select(`
-      id, title, slug, excerpt, read_time_minutes, published_at, view_count,
-      categories ( id, name, slug, color, description ),
-      profiles ( id, username, full_name ),
-      post_tags ( tags ( id, name, slug ) )
-    `)
-    .eq('status', 'published')
-    .order('published_at', { ascending: false })
+  const [postsData, categories, tags] = await Promise.all([
+    getFilteredPosts(q, activeCategory?.id ?? null),
+    getCategories(),
+    getTags(),
+  ])
 
-  if (q) {
-    query = query.or(`title.ilike.%${q}%,excerpt.ilike.%${q}%`)
-  }
-  if (categoryId) {
-    query = query.eq('category_id', categoryId)
-  }
-
-  const { data: postsData } = await query
-
-  // Filter by tag client-side (nested relation)
-  let posts = postsData ?? []
+  let posts: PostSummary[] = postsData
   if (tag) {
-    posts = posts.filter((p: any) =>
-      p.post_tags?.some((pt: any) => pt.tags?.slug === tag)
+    posts = posts.filter((p) =>
+      p.post_tags?.some((pt) => pt.tags?.slug === tag)
     )
   }
 
-  const [{ data: categories }, { data: tags }] = await Promise.all([
-    supabase.from('categories').select('id, name, slug').order('name'),
-    supabase.from('tags').select('id, name, slug').order('name'),
-  ])
-
-  const activeCategory = (categories ?? []).find((c: any) => c.slug === category)
-  const activeTag = (tags ?? []).find((t: any) => t.slug === tag)
+  const activeTag = tags.find((t: Tag) => t.slug === tag)
 
   return (
     <div>
@@ -119,7 +92,7 @@ const ArchivePage = async ({
                       All Topics
                     </Link>
                   </li>
-                  {(categories ?? []).map((cat: any) => (
+                  {categories.map((cat: Category) => (
                     <li key={cat.id}>
                       <Link
                         href={`/archive?category=${cat.slug}${q ? `&q=${q}` : ''}${tag ? `&tag=${tag}` : ''}`}
@@ -141,7 +114,7 @@ const ArchivePage = async ({
                   TAGS
                 </h3>
                 <div className="flex flex-wrap gap-1.5">
-                  {(tags ?? []).map((t: any) => (
+                  {tags.map((t: Tag) => (
                     <Link
                       key={t.id}
                       href={`/archive?tag=${t.slug}${q ? `&q=${q}` : ''}${category ? `&category=${category}` : ''}`}
@@ -180,9 +153,9 @@ const ArchivePage = async ({
             </div>
 
             <div className="space-y-3">
-              {posts.map((post: any) => {
+              {posts.map((post: PostSummary) => {
                 const postTags =
-                  post.post_tags?.map((pt: any) => pt.tags).filter(Boolean) ?? []
+                  post.post_tags?.map((pt) => pt.tags).filter(Boolean) ?? []
                 return (
                   <article
                     key={post.id}
@@ -211,7 +184,7 @@ const ArchivePage = async ({
                           </span>
                           <div className="flex flex-wrap gap-1.5">
                             {postTags.slice(0, 3).map(
-                              (t: any) =>
+                              (t) =>
                                 t && (
                                   <span
                                     key={t.id}
