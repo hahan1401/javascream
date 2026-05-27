@@ -15,15 +15,18 @@ This document is authoritative. All AI assistants (Claude, Copilot, etc.) and co
 ```
 src/
 ├── app/                    # Next.js App Router pages and layouts
-│   ├── layout.tsx          # Root layout (fonts, global providers)
-│   ├── page.tsx            # Home page (/)
+│   ├── layout.tsx          # Root layout (html/body shell, fonts)
 │   ├── globals.css         # Global styles and Tailwind base
 │   ├── favicon.ico
-│   ├── archive/
-│   │   └── page.tsx        # Archive page (/archive)
-│   └── articles/
-│       └── [slug]/
-│           └── page.tsx    # Article detail page (/articles/:slug)
+│   ├── (client)/           # Route group: browser-rendered pages (Navbar + Footer)
+│   │   ├── layout.tsx      # Client layout (Navbar, Footer)
+│   │   ├── page.tsx        # Home page (/)
+│   │   ├── archive/
+│   │   │   └── page.tsx    # Archive page (/archive)
+│   │   └── articles/
+│   │       └── [slug]/
+│   │           └── page.tsx # Article detail page (/articles/:slug)
+│   └── (api)/              # Route group: API route handlers
 ├── lib/                    # Shared utilities and client setup
 │   ├── supabase.ts         # Supabase client instance
 │   └── markdown.ts         # Markdown parsing helpers
@@ -41,7 +44,8 @@ src/
 
 | What | Where |
 |------|-------|
-| Page or route | `src/app/<path>/page.tsx` |
+| Client page or route | `src/app/(client)/<path>/page.tsx` |
+| API route handler | `src/app/(api)/<path>/route.ts` |
 | Shared UI component | `src/components/<ComponentName>.tsx` (create if needed) |
 | Supabase query / data fetch | `src/queries/<domain>.ts` |
 | Singleton client / utility | `src/lib/<name>.ts` |
