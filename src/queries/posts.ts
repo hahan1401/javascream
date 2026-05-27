@@ -75,6 +75,16 @@ export const getPostBySlug = async (slug: string): Promise<Post | null> => {
   return data ? (data as unknown as Post) : null
 }
 
+export const getPostsByIds = async (ids: string[]): Promise<PostSummary[]> => {
+  if (ids.length === 0) return []
+  const { data } = await supabase
+    .from('posts')
+    .select(POST_SUMMARY_SELECT)
+    .in('id', ids)
+  const posts = (data ?? []) as unknown as PostSummary[]
+  return ids.map(id => posts.find(p => p.id === id)).filter((p): p is PostSummary => Boolean(p))
+}
+
 export const getRelatedPosts = async (
   categoryId: string,
   excludeId: string,

@@ -1,4 +1,5 @@
 import { getFilteredPosts } from '@/src/queries/posts'
+import { semanticSearch } from '@/src/queries/search'
 import { getCategories, getCategoryBySlug } from '@/src/queries/categories'
 import { getTags } from '@/src/queries/tags'
 import type { PostSummary, Category, Tag } from '@/src/types'
@@ -25,12 +26,15 @@ const ArchivePage = async ({
   const activeCategory = category ? await getCategoryBySlug(category) : null
 
   const [postsData, categories, tags] = await Promise.all([
-    getFilteredPosts(q, activeCategory?.id ?? null),
+    q ? semanticSearch(q) : getFilteredPosts('', activeCategory?.id ?? null),
     getCategories(),
     getTags(),
   ])
 
   let posts: PostSummary[] = postsData
+  if (q && activeCategory) {
+    posts = posts.filter((p) => p.categories?.id === activeCategory.id)
+  }
   if (tag) {
     posts = posts.filter((p) =>
       p.post_tags?.some((pt) => pt.tags?.slug === tag)
